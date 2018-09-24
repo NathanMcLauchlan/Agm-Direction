@@ -1,2 +1,22 @@
-# dependencies
+$ cat .gitignore
 /node_modules
+/dist
+/documentation
+/coverage
+
+# Log Files
+*.log
+
+# Pack File
+*.tgz
+
+# VS Code
+.vscode/*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Mac
+.DS_Store
+**/.DS_Store

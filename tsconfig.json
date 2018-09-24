@@ -1,22 +1,25 @@
 {
     "compilerOptions": {
-        "noImplicitAny": true,
-        "module": "commonjs",
-        "target": "es5",
+        "baseUrl": ".",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "rootDir": ".",
         "sourceMap": true,
-        "declaration": true,
-        "typeRoots": [
-            "node_modules/@types"
+        "inlineSources": true,
+        "target": "es5",
+        "skipLibCheck": true,
+        "lib": [
+            "es2015",
+            "dom"
         ],
-        "types": [
-            "core-js"
+        "typeRoots": [
+            "node_modules/@types/"
         ]
     },
-    "files": [
-        "index.ts"
-    ],
     "exclude": [
         "node_modules"
     ]
