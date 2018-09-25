@@ -4,6 +4,7 @@
  */
 import { NgModule } from '@angular/core';
 import { AgmDirection } from '../directive/agm-direction.directive';
+import { HttpClientModule } from '@angular/common/http';
 export { AgmDirection } from '../directive/agm-direction.directive';
 var AgmDirectionModule = /** @class */ (function () {
     function AgmDirectionModule() {
@@ -21,7 +22,9 @@ var AgmDirectionModule = /** @class */ (function () {
     };
     AgmDirectionModule.decorators = [
         { type: NgModule, args: [{
-                    imports: [],
+                    imports: [
+                        HttpClientModule,
+                    ],
                     declarations: [
                         AgmDirection,
                     ],

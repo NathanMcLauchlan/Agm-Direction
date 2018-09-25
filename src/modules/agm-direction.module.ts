@@ -1,10 +1,13 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { AgmDirection } from '../directive/agm-direction.directive';
+import { HttpClientModule } from '@angular/common/http';
 
 export * from '../directive/agm-direction.directive';
 
 @NgModule({
-    imports: [],
+    imports: [
+        HttpClientModule,
+    ],
     declarations: [
         AgmDirection,
     ],

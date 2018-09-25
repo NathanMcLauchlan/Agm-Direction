@@ -1,6 +1,6 @@
 import { Directive, Input, Output, EventEmitter, NgModule } from '@angular/core';
 import { GoogleMapsAPIWrapper } from '@agm/core';
-import { Http } from '@angular/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 /**
  * @fileoverview added by tsickle
@@ -136,7 +136,6 @@ class AgmDirection {
             }
             else {
                 this.http.get(`/umbraco/api/thirdpartycaching/GetGoogleDirections?request=${hash}`).subscribe((cacheResponse) => {
-                    cacheResponse = cacheResponse.json();
                     console.log('cached response: ', cacheResponse);
                     if (cacheResponse == null) {
                         // Request new direction
@@ -324,7 +323,7 @@ AgmDirection.decorators = [
 /** @nocollapse */
 AgmDirection.ctorParameters = () => [
     { type: GoogleMapsAPIWrapper, },
-    { type: Http, },
+    { type: HttpClient, },
 ];
 AgmDirection.propDecorators = {
     "origin": [{ type: Input },],
@@ -364,7 +363,9 @@ class AgmDirectionModule {
 }
 AgmDirectionModule.decorators = [
     { type: NgModule, args: [{
-                imports: [],
+                imports: [
+                    HttpClientModule,
+                ],
                 declarations: [
                     AgmDirection,
                 ],

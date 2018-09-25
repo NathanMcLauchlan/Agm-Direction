@@ -1,7 +1,7 @@
 import { Directive, Input, Output, OnChanges, OnInit, EventEmitter } from '@angular/core';
 import { GoogleMapsAPIWrapper } from '@agm/core';
 import { InfoWindow, Marker, GoogleMap } from '@agm/core/services/google-maps-types';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 
 declare var google: any;
 @Directive({
@@ -57,7 +57,7 @@ export class AgmDirection implements OnChanges, OnInit {
 
   constructor(
     private gmapsApi: GoogleMapsAPIWrapper,
-    private http: Http
+    private http: HttpClient
   ) { }
 
   ngOnInit() {
@@ -161,7 +161,6 @@ export class AgmDirection implements OnChanges, OnInit {
       } else {
 
         this.http.get(`/umbraco/api/thirdpartycaching/GetGoogleDirections?request=${hash}`).subscribe((cacheResponse: any) => {
-          cacheResponse = cacheResponse.json();
           console.log('cached response: ', cacheResponse);
           if (cacheResponse == null) {
 
@@ -282,6 +281,7 @@ export class AgmDirection implements OnChanges, OnInit {
 
           });
           } else {
+            
             this.onResponse.emit(cacheResponse);
 
             this.directionsDisplay.setDirections(cacheResponse);

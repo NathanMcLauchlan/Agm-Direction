@@ -1,7 +1,7 @@
 import { OnChanges, OnInit, EventEmitter } from '@angular/core';
 import { GoogleMapsAPIWrapper } from '@agm/core';
 import { InfoWindow } from '@agm/core/services/google-maps-types';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 export declare class AgmDirection implements OnChanges, OnInit {
     private gmapsApi;
     private http;
@@ -40,7 +40,7 @@ export declare class AgmDirection implements OnChanges, OnInit {
     private destinationMarker;
     private waypointsMarker;
     private isFirstChange;
-    constructor(gmapsApi: GoogleMapsAPIWrapper, http: Http);
+    constructor(gmapsApi: GoogleMapsAPIWrapper, http: HttpClient);
     ngOnInit(): void;
     ngOnChanges(obj: any): void;
     /**
