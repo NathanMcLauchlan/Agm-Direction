@@ -1,6 +1,7 @@
 import { Directive, Input, Output, OnChanges, OnInit, EventEmitter } from '@angular/core';
 import { GoogleMapsAPIWrapper } from '@agm/core';
 import { InfoWindow, Marker, GoogleMap } from '@agm/core/services/google-maps-types';
+import { Http } from '@angular/http';
 
 declare var google: any;
 @Directive({
@@ -56,6 +57,7 @@ export class AgmDirection implements OnChanges, OnInit {
 
   constructor(
     private gmapsApi: GoogleMapsAPIWrapper,
+    private http: Http
   ) { }
 
   ngOnInit() {
@@ -136,30 +138,154 @@ export class AgmDirection implements OnChanges, OnInit {
         this.directionsDisplay.setPanel(this.panel);
       }
 
+      const requestObj = {
+        origin: this.origin,
+        destination: this.destination,
+        waypoints: this.waypoints
+      };
+
+      function hashCode(s: string) {
+        for(var i = 0, h = 0; i < s.length; i++)
+        {
+          h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+        }
+        return h;
+      }
+
+      const hash = hashCode(JSON.stringify(requestObj));
+
       // Render exist direction
       if (typeof this.renderRoute === 'object' && this.renderRoute !== null) {
         this.directionsDisplay.setDirections(this.renderRoute);
         this.renderRoute = null; // or set undefined, ''
       } else {
 
-        // Request new direction
-        this.directionsService.route({
-          origin: this.origin,
-          destination: this.destination,
-          travelMode: this.travelMode,
-          transitOptions: this.transitOptions,
-          drivingOptions: this.drivingOptions,
-          waypoints: this.waypoints,
-          optimizeWaypoints: this.optimizeWaypoints,
-          provideRouteAlternatives: this.provideRouteAlternatives,
-          avoidHighways: this.avoidHighways,
-          avoidTolls: this.avoidTolls,
-        }, (response: any, status: any) => {
+        this.http.get(`/umbraco/api/thirdpartycaching/GetGoogleDirections?request=${hash}`).subscribe((cacheResponse: any) => {
+          cacheResponse = cacheResponse.json();
+          console.log('cached response: ', cacheResponse);
+          if (cacheResponse == null) {
 
-          this.onResponse.emit(response);
+          // Request new direction
+          this.directionsService.route({
+            origin: this.origin,
+            destination: this.destination,
+            travelMode: this.travelMode,
+            transitOptions: this.transitOptions,
+            drivingOptions: this.drivingOptions,
+            waypoints: this.waypoints,
+            optimizeWaypoints: this.optimizeWaypoints,
+            provideRouteAlternatives: this.provideRouteAlternatives,
+            avoidHighways: this.avoidHighways,
+            avoidTolls: this.avoidTolls,
+          }, (response: any, status: any) => {
 
-          if (status === 'OK') {
-            this.directionsDisplay.setDirections(response);
+            this.onResponse.emit(response);
+
+            if (status === 'OK') {
+              this.directionsDisplay.setDirections(response);
+
+              this.http.post(`/umbraco/api/thirdpartycaching/SaveGoogleDirections?request=${hash}`, response).subscribe((saveRes) => {
+                console.log('save response:', saveRes);
+              });
+
+              /**
+               * Emit The DirectionsResult Object
+               * https://developers.google.com/maps/documentation/javascript/directions?hl=en#DirectionsResults
+               */
+
+              // Custom Markers
+              if (typeof this.markerOptions !== 'undefined') {
+
+                // Remove origin markers
+                try {
+                  if (typeof this.originMarker !== 'undefined') {
+                    google.maps.event.clearListeners(this.originMarker, 'click');
+                    this.originMarker.setMap(null);
+                  }
+                  if (typeof this.destinationMarker !== 'undefined') {
+                    google.maps.event.clearListeners(this.destinationMarker, 'click');
+                    this.destinationMarker.setMap(null);
+                  }
+                  this.waypointsMarker.forEach((w: any) => {
+                    if (typeof w !== 'undefined') {
+                      google.maps.event.clearListeners(w, 'click');
+                      w.setMap(null);
+                    }
+                  });
+
+                } catch (err) {
+                  console.error('Can not reset custom marker.', err);
+                }
+
+                // Set custom markers
+                const _route = response.routes[0].legs[0];
+                try {
+                  // Origin Marker
+                  if (typeof this.markerOptions.origin !== 'undefined') {
+                    this.markerOptions.origin.map = map;
+                    this.markerOptions.origin.position = _route.start_location;
+                    this.originMarker = this.setMarker(
+                      map,
+                      this.originMarker,
+                      this.markerOptions.origin,
+                      _route.start_address,
+                    );
+                  }
+
+                  // Destination Marker
+                  if (typeof this.markerOptions.destination !== 'undefined') {
+                    this.markerOptions.destination.map = map;
+                    this.markerOptions.destination.position = _route.end_location;
+                    this.destinationMarker = this.setMarker(
+                      map,
+                      this.destinationMarker,
+                      this.markerOptions.destination,
+                      _route.end_address,
+                    );
+                  }
+
+                  // Waypoints Marker
+                  if (typeof this.markerOptions.waypoints !== 'undefined') {
+
+                    this.waypoints.forEach((waypoint: any, index: number) => {
+
+                      // If waypoints are not array then set all the same
+                      if (!Array.isArray(this.markerOptions.waypoints)) {
+                        this.markerOptions.waypoints.map = map;
+                        this.markerOptions.waypoints.position = _route.via_waypoints[index];
+                        this.waypointsMarker.push(this.setMarker(
+                          map,
+                          waypoint,
+                          this.markerOptions.waypoints,
+                          _route.via_waypoints[index],
+                        ));
+                      } else {
+                        this.markerOptions.waypoints[index].map = map;
+                        this.markerOptions.waypoints[index].position = _route.via_waypoints[index];
+                        this.waypointsMarker.push(this.setMarker(
+                          map,
+                          waypoint,
+                          this.markerOptions.waypoints[index],
+                          _route.via_waypoints[index],
+                        ));
+                      }
+
+                    }); // End forEach
+
+                  }
+                } catch (err) {
+                  console.error('MarkerOptions error.', err);
+                }
+              }
+
+            }
+
+          });
+          } else {
+            this.onResponse.emit(cacheResponse);
+
+            this.directionsDisplay.setDirections(cacheResponse);
+
 
             /**
              * Emit The DirectionsResult Object
@@ -191,7 +317,7 @@ export class AgmDirection implements OnChanges, OnInit {
               }
 
               // Set custom markers
-              const _route = response.routes[0].legs[0];
+              const _route = cacheResponse.routes[0].legs[0];
               try {
                 // Origin Marker
                 if (typeof this.markerOptions.origin !== 'undefined') {
@@ -251,9 +377,11 @@ export class AgmDirection implements OnChanges, OnInit {
               }
             }
 
-          }
+            
 
+          }
         });
+      
       }
     });
   }
