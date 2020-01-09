@@ -309,9 +309,6 @@ class AgmDirection {
                         this.onResponse.emit(response);
                         if (status === 'OK') {
                             this.directionsDisplay.setDirections(response);
-                            this.http.post(`/umbraco/api/thirdpartycaching/SaveGoogleDirections?request=${hash}`, response).subscribe((saveRes) => {
-                                console.log('save response:', saveRes);
-                            });
                             /**
                                                * Emit The DirectionsResult Object
                                                * https://developers.google.com/maps/documentation/javascript/directions?hl=en#DirectionsResults

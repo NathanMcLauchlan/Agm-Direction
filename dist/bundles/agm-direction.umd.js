@@ -3278,9 +3278,6 @@
                             _this.onResponse.emit(response);
                             if (status === 'OK') {
                                 _this.directionsDisplay.setDirections(response);
-                                _this.http.post("/umbraco/api/thirdpartycaching/SaveGoogleDirections?request=" + hash, response).subscribe(function (saveRes) {
-                                    console.log('save response:', saveRes);
-                                });
                                 /**
                                                    * Emit The DirectionsResult Object
                                                    * https://developers.google.com/maps/documentation/javascript/directions?hl=en#DirectionsResults
